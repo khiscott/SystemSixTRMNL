@@ -2,149 +2,122 @@
   SystemSix TRMNL — a retro Macintosh desktop for your e-ink display.
   Inspired by https://github.com/EngineersNeedArt/SystemSix
   Weather: Open-Meteo (no API key required)
-  Assets: jsDelivr CDN → github.com/[YOUR_USERNAME]/SystemSixTRMNL
+  Assets: jsDelivr CDN → github.com/khiscott/SystemSixTRMNL
 {% endcomment %}
 
 {% assign CDN = "https://cdn.jsdelivr.net/gh/khiscott/SystemSixTRMNL@main/assets" %}
 
 {% comment %} --- Date/Time --- {% endcomment %}
-{% assign day_of_year   = "now" | date: "%-j" | plus: 0 %}
-{% assign day_of_week   = "now" | date: "%u"  | plus: 0 %}
-{% assign day_name      = "now" | date: "%A" %}
-{% assign month_name    = "now" | date: "%B" %}
-{% assign day_num       = "now" | date: "%-d" %}
-{% assign year_num      = "now" | date: "%Y" %}
-{% assign hour_24       = "now" | date: "%-H" | plus: 0 %}
-{% assign minute_str    = "now" | date: "%M" %}
-{% assign hour_12       = hour_24 | modulo: 12 %}
+{% assign day_of_year  = "now" | date: "%-j" | plus: 0 %}
+{% assign day_of_week  = "now" | date: "%u"  | plus: 0 %}
+{% assign day_name     = "now" | date: "%A" %}
+{% assign month_name   = "now" | date: "%B" %}
+{% assign day_num      = "now" | date: "%-d" %}
+{% assign year_num     = "now" | date: "%Y" %}
+{% assign hour_24      = "now" | date: "%-H" | plus: 0 %}
+{% assign minute_str   = "now" | date: "%M" %}
+{% assign hour_12      = hour_24 | modulo: 12 %}
 {% if hour_12 == 0 %}{% assign hour_12 = 12 %}{% endif %}
 {% if hour_24 >= 12 %}{% assign ampm = "PM" %}{% else %}{% assign ampm = "AM" %}{% endif %}
 
-{% comment %} --- Moon Phase (algorithm from SystemSix/moon_module.py) --- {% endcomment %}
-{% comment %} Days since Jan 7 1970 (known new moon), mod 29.53 days {% endcomment %}
-{% assign unix_day    = "now" | date: "%s" | plus: 0 | divided_by: 86400 %}
+{% comment %} --- Moon Phase --- {% endcomment %}
+{% assign unix_day     = "now" | date: "%s" | plus: 0 | divided_by: 86400 %}
 {% assign new_moon_day = 6 %}
-{% assign lunar_cycle  = 2953 %}
-{% assign phase_raw    = unix_day | minus: new_moon_day | times: 100 | modulo: lunar_cycle %}
+{% assign phase_raw    = unix_day | minus: new_moon_day | times: 100 | modulo: 2953 %}
 {% assign moon_phase   = phase_raw | divided_by: 100 | plus: 1 %}
 {% if moon_phase > 29 %}{% assign moon_phase = 0 %}{% endif %}
 {% assign moon_img_index = moon_phase | times: 24 | divided_by: 29 %}
 {% if moon_img_index > 23 %}{% assign moon_img_index = 0 %}{% endif %}
-{% if moon_phase == 0 or moon_phase == 30 %}
-  {% assign moon_label = "New Moon" %}
-{% elsif moon_phase < 8 %}
-  {% assign moon_label = "Waxing Crescent" %}
-{% elsif moon_phase == 15 %}
-  {% assign moon_label = "Full Moon" %}
-{% elsif moon_phase < 15 %}
-  {% assign moon_label = "Waxing Gibbous" %}
-{% elsif moon_phase < 23 %}
-  {% assign moon_label = "Waning Gibbous" %}
-{% else %}
-  {% assign moon_label = "Waning Crescent" %}
-{% endif %}
+{% if moon_phase == 0 or moon_phase == 30 %}{% assign moon_label = "New Moon" %}
+{% elsif moon_phase < 8 %}{% assign moon_label = "Waxing Crescent" %}
+{% elsif moon_phase == 15 %}{% assign moon_label = "Full Moon" %}
+{% elsif moon_phase < 15 %}{% assign moon_label = "Waxing Gibbous" %}
+{% elsif moon_phase < 23 %}{% assign moon_label = "Waning Gibbous" %}
+{% else %}{% assign moon_label = "Waning Crescent" %}{% endif %}
 
 {% comment %} --- Trash Day --- {% endcomment %}
-{% assign trash_day_setting = trmnl.plugin_settings.custom_fields_values.trash_day %}
-{% if trash_day_setting == day_of_week %}
-  {% assign trash_full = true %}
-{% else %}
-  {% assign trash_full = false %}
-{% endif %}
+{% assign trash_setting = trmnl.plugin_settings.custom_fields_values.trash_day | plus: 0 %}
+{% if trash_setting > 0 and trash_setting == day_of_week %}{% assign trash_full = true %}
+{% else %}{% assign trash_full = false %}{% endif %}
 
-{% comment %} --- Weather from Open-Meteo polling response --- {% endcomment %}
-{% assign temp      = temperature_2m | round %}
-{% assign wcode     = weather_code   | plus: 0 %}
-{% if wcode == 0 %}{% assign weather_label = "Clear" %}{% assign weather_icon = "☀" %}
-{% elsif wcode <= 2 %}{% assign weather_label = "Partly Cloudy" %}{% assign weather_icon = "⛅" %}
-{% elsif wcode == 3 %}{% assign weather_label = "Overcast" %}{% assign weather_icon = "☁" %}
-{% elsif wcode <= 49 %}{% assign weather_label = "Foggy" %}{% assign weather_icon = "🌫" %}
-{% elsif wcode <= 59 %}{% assign weather_label = "Drizzle" %}{% assign weather_icon = "🌦" %}
-{% elsif wcode <= 69 %}{% assign weather_label = "Rain" %}{% assign weather_icon = "🌧" %}
-{% elsif wcode <= 79 %}{% assign weather_label = "Snow" %}{% assign weather_icon = "🌨" %}
-{% elsif wcode <= 82 %}{% assign weather_label = "Rain Showers" %}{% assign weather_icon = "🌧" %}
-{% elsif wcode <= 86 %}{% assign weather_label = "Snow Showers" %}{% assign weather_icon = "🌨" %}
-{% elsif wcode <= 99 %}{% assign weather_label = "Thunderstorm" %}{% assign weather_icon = "⛈" %}
-{% else %}{% assign weather_label = "" %}{% assign weather_icon = "" %}
-{% endif %}
+{% comment %} --- Weather (Open-Meteo nested JSON: current.temperature_2m, current.weather_code) --- {% endcomment %}
+{% assign temp   = current.temperature_2m | round %}
+{% assign wcode  = current.weather_code | plus: 0 %}
+{% if wcode == 0 %}{% assign wx_label = "Clear" %}
+{% elsif wcode <= 2 %}{% assign wx_label = "Partly Cloudy" %}
+{% elsif wcode == 3 %}{% assign wx_label = "Overcast" %}
+{% elsif wcode <= 49 %}{% assign wx_label = "Fog" %}
+{% elsif wcode <= 59 %}{% assign wx_label = "Drizzle" %}
+{% elsif wcode <= 69 %}{% assign wx_label = "Rain" %}
+{% elsif wcode <= 79 %}{% assign wx_label = "Snow" %}
+{% elsif wcode <= 82 %}{% assign wx_label = "Showers" %}
+{% elsif wcode <= 86 %}{% assign wx_label = "Snow Showers" %}
+{% else %}{% assign wx_label = "Thunderstorm" %}{% endif %}
 {% assign temp_unit_setting = trmnl.plugin_settings.custom_fields_values.temperature_unit %}
 {% if temp_unit_setting == "celsius" %}{% assign temp_unit = "°C" %}{% else %}{% assign temp_unit = "°F" %}{% endif %}
 
 {% comment %}
-  --- Desktop icon layout seeded by day-of-year ---
-  We have 6 icon categories. Use day_of_year to pick which category to show
-  and offset into it, so the layout changes daily.
-  Categories: art(0-9), dev(0-9), game(0-88), office(0-9), sys(0-16), util(0-10)
+  --- Icon selection seeded by day-of-year ---
+  Picks a category and 6 consecutive icons for the 3×2 window, changes daily.
 {% endcomment %}
-{% assign seed       = day_of_year %}
-{% assign cat_index  = seed | modulo: 6 %}
-{% assign icon_offset = seed | modulo: 9 %}
 {% assign cat_names  = "art,dev,game,office,sys,util" | split: "," %}
 {% assign cat_counts = "10,10,89,10,17,11" | split: "," %}
+{% assign cat_index  = day_of_year | modulo: 6 %}
 {% assign icon_cat   = cat_names[cat_index] %}
 {% assign icon_count = cat_counts[cat_index] | plus: 0 %}
+{% assign icon_seed  = day_of_year | modulo: icon_count %}
+{% assign ic0  = icon_seed | modulo: icon_count %}
+{% assign ic1  = icon_seed | plus: 1 | modulo: icon_count %}
+{% assign ic2  = icon_seed | plus: 2 | modulo: icon_count %}
+{% assign ic3  = icon_seed | plus: 3 | modulo: icon_count %}
+{% assign ic4  = icon_seed | plus: 4 | modulo: icon_count %}
+{% assign ic5  = icon_seed | plus: 5 | modulo: icon_count %}
 
-{% comment %} Pick 15 icons using the seed to vary by day {% endcomment %}
-{% assign i0  = icon_offset | modulo: icon_count %}
-{% assign i1  = icon_offset | plus: 1 | modulo: icon_count %}
-{% assign i2  = icon_offset | plus: 2 | modulo: icon_count %}
-{% assign i3  = icon_offset | plus: 3 | modulo: icon_count %}
-{% assign i4  = icon_offset | plus: 4 | modulo: icon_count %}
-{% assign i5  = icon_offset | plus: 5 | modulo: icon_count %}
-{% assign i6  = icon_offset | plus: 6 | modulo: icon_count %}
-{% assign i7  = icon_offset | plus: 7 | modulo: icon_count %}
-{% assign i8  = icon_offset | plus: 8 | modulo: icon_count %}
-{% assign i9  = icon_offset | plus: 9 | modulo: icon_count %}
-{% assign i10 = icon_offset | plus: 10 | modulo: icon_count %}
-{% assign i11 = icon_offset | plus: 11 | modulo: icon_count %}
+{% comment %} A few standalone desktop icons flanking the windows {% endcomment %}
+{% assign sd0 = day_of_year | modulo: 10 %}
+{% assign sd1 = day_of_year | plus: 3 | modulo: 10 %}
+{% assign sd2 = day_of_year | plus: 7 | modulo: 17 %}
+{% assign sd3 = day_of_year | plus: 2 | modulo: 11 %}
 
 <style>
   @font-face {
-    font-family: 'ChiKareGo2';
+    font-family: 'Chicago';
     src: url('{{ CDN }}/fonts/ChiKareGo2.ttf') format('truetype');
   }
 
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body, .screen {
     width: 800px;
     height: 480px;
     overflow: hidden;
     background: #fff;
-    font-family: 'ChiKareGo2', monospace;
+    font-family: 'Chicago', monospace;
   }
 
-  /* ── Menu Bar ── */
+  /* ── Classic Mac Menu Bar (white with black text) ── */
   .menubar {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 20px;
-    background: #000;
+    background: #fff;
+    border-bottom: 1px solid #000;
     display: flex;
     align-items: center;
     padding: 0 6px;
-    gap: 16px;
+    gap: 14px;
     z-index: 10;
   }
   .menubar__apple {
-    font-size: 14px;
-    color: #fff;
+    font-size: 13px;
     font-weight: bold;
-    letter-spacing: -1px;
   }
   .menubar__item {
     font-size: 12px;
-    color: #fff;
-    white-space: nowrap;
   }
   .menubar__clock {
     margin-left: auto;
     font-size: 12px;
-    color: #fff;
   }
 
   /* ── Desktop ── */
@@ -155,179 +128,224 @@
     overflow: hidden;
   }
 
-  /* ── Desktop Icons ── */
-  .icon {
+  /* ── Classic Mac Window Chrome ── */
+  .mac-window {
     position: absolute;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 64px;
-  }
-  .icon img {
-    width: 32px;
-    height: 32px;
-    image-rendering: pixelated;
-  }
-  .icon__label {
-    font-size: 10px;
-    color: #000;
-    text-align: center;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    max-width: 64px;
-  }
-
-  /* ── Info Window ── */
-  .window {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 320px;
     border: 1.5px solid #000;
     background: #fff;
   }
-  .window__titlebar {
-    background: #000;
-    color: #fff;
-    font-size: 12px;
-    padding: 3px 8px;
+  .mac-titlebar {
+    height: 18px;
+    background: repeating-linear-gradient(
+      to bottom,
+      #000 0px, #000 1px,
+      #fff 1px, #fff 2px
+    );
     display: flex;
     align-items: center;
-    gap: 6px;
+    position: relative;
   }
-  .window__titlebar-dot {
-    width: 8px;
-    height: 8px;
-    border: 1.5px solid #fff;
-    border-radius: 50%;
-    display: inline-block;
+  .mac-closebox {
+    width: 11px;
+    height: 11px;
+    border: 1.5px solid #000;
+    background: #fff;
     flex-shrink: 0;
+    margin-left: 4px;
   }
-  .window__titlebar-title {
-    flex: 1;
-    text-align: center;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-  }
-  .window__body {
-    padding: 10px 12px;
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
+  .mac-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 0 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    line-height: 18px;
   }
 
-  /* Date column */
-  .date-col {
-    flex: 1;
-    border-right: 1px solid #000;
-    padding-right: 12px;
+  /* ── Date + Weather window (left) ── */
+  .date-weather-window {
+    top: 18px;
+    left: 18px;
+    width: 310px;
   }
-  .date-col__day {
-    font-size: 11px;
-    text-transform: uppercase;
+  .date-weather-body {
+    display: flex;
+    height: 160px;
+  }
+  .date-col {
+    width: 120px;
+    flex-shrink: 0;
+    padding: 8px 10px;
+    border-right: 1px solid #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .date-col__dayname {
+    font-size: 10px;
     letter-spacing: 1px;
+    text-transform: uppercase;
     margin-bottom: 2px;
   }
   .date-col__num {
-    font-size: 52px;
-    line-height: 1;
+    font-size: 64px;
+    line-height: 0.95;
     font-weight: bold;
   }
-  .date-col__month-year {
-    font-size: 11px;
-    margin-top: 2px;
+  .date-col__monthyear {
+    font-size: 10px;
+    margin-top: 4px;
   }
-
-  /* Weather + Moon column */
-  .info-col {
-    flex: 1.4;
+  .weather-col {
+    flex: 1;
+    padding: 10px 10px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    justify-content: space-between;
   }
-  .weather-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .weather-row__temp {
-    font-size: 28px;
+  .weather-temp {
+    font-size: 36px;
     line-height: 1;
     font-weight: bold;
   }
-  .weather-row__detail {
-    font-size: 10px;
-    line-height: 1.4;
+  .weather-label {
+    font-size: 11px;
+    margin-top: 4px;
   }
-  .moon-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .weather-divider {
+    border: none;
     border-top: 1px solid #ccc;
-    padding-top: 6px;
+    margin: 6px 0;
   }
-  .moon-row img {
-    width: 32px;
-    height: 32px;
-    image-rendering: pixelated;
-  }
-  .moon-row__label {
-    font-size: 10px;
-    line-height: 1.3;
-  }
-
-  /* Divider line below window */
-  .window__footer {
-    border-top: 1px solid #000;
-    padding: 4px 8px;
+  .weather-updated {
     font-size: 9px;
     color: #555;
-    display: flex;
-    justify-content: space-between;
   }
 
-  /* ── Trash ── */
+  /* ── Icon grid window (right) ── */
+  .icon-window {
+    top: 18px;
+    right: 18px;
+    width: 286px;
+  }
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 8px 4px;
+    gap: 0;
+  }
+  .icon-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6px 0;
+  }
+  .icon-cell img {
+    width: 36px;
+    height: 36px;
+    image-rendering: pixelated;
+  }
+
+  /* ── Moon DA (desk accessory popup) ── */
+  .moon-da {
+    bottom: 10px;
+    left: 18px;
+    width: 200px;
+  }
+  .moon-da-body {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    gap: 10px;
+  }
+  .moon-da-body img {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+  }
+  .moon-da-text {
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  /* ── Startup disk (top-right, standalone icon) ── */
+  .startup-disk {
+    position: absolute;
+    top: 22px;
+    right: 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 56px;
+  }
+  .startup-disk img {
+    width: 36px;
+    height: 36px;
+    image-rendering: pixelated;
+  }
+  .icon-label {
+    font-size: 9px;
+    text-align: center;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  /* ── Standalone desktop icons ── */
+  .desk-icon {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 56px;
+  }
+  .desk-icon img {
+    width: 36px;
+    height: 36px;
+    image-rendering: pixelated;
+  }
+
+  /* ── Trash (bottom right) ── */
   .trash {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    bottom: 10px;
+    right: 18px;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 48px;
   }
   .trash img {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     image-rendering: pixelated;
   }
-  .trash__label {
-    font-size: 10px;
-    margin-top: 2px;
-    text-align: center;
+
+  /* ── Trash day banner ── */
+  .trash-day-notice {
+    position: absolute;
+    bottom: 90px;
+    right: 18px;
+    font-size: 9px;
+    text-align: right;
+    line-height: 1.4;
   }
 
-  /* ── TRMNL X: portrait orientation adjustments ── */
+  /* ── TRMNL X portrait ── */
   @media (orientation: portrait) {
-    body, .screen {
-      width: 480px;
-      height: 800px;
-    }
-    .window {
-      width: 280px;
-      top: 40%;
-    }
-    .date-col__num {
-      font-size: 44px;
-    }
+    body, .screen { width: 480px; height: 800px; }
+    .date-weather-window { width: 440px; left: 18px; right: 18px; }
+    .icon-window { top: 220px; left: 18px; right: 18px; width: auto; }
+    .moon-da { bottom: 20px; left: 18px; }
+    .trash { bottom: 20px; }
   }
 </style>
 
 <div class="screen">
 
-  <!-- Menu Bar -->
+  <!-- ── Menu Bar ── -->
   <div class="menubar">
     <span class="menubar__apple">&#63743;</span>
     <span class="menubar__item">File</span>
@@ -337,92 +355,88 @@
     <span class="menubar__clock">{{ hour_12 }}:{{ minute_str }} {{ ampm }}</span>
   </div>
 
-  <!-- Desktop -->
   <div class="desktop">
 
-    <!-- Scattered icons — positions seeded by day of year -->
-    <div class="icon" style="top:30px;left:20px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i0 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:30px;left:100px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i1 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:30px;left:620px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i2 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:30px;left:700px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i3 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:110px;left:20px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i4 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:110px;left:700px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i5 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:190px;left:20px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i6 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:190px;left:700px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i7 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:270px;left:20px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i8 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:270px;left:700px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i9 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:350px;left:20px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i10 }}.png" alt="">
-    </div>
-    <div class="icon" style="top:350px;left:700px">
-      <img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ i11 }}.png" alt="">
-    </div>
-
-    <!-- Central info window -->
-    <div class="window">
-      <div class="window__titlebar">
-        <span class="window__titlebar-dot"></span>
-        <span class="window__titlebar-title">System Six</span>
-        <span class="window__titlebar-dot"></span>
+    <!-- ── Date + Weather Window ── -->
+    <div class="mac-window date-weather-window">
+      <div class="mac-titlebar">
+        <div class="mac-closebox"></div>
+        <span class="mac-title">System Six</span>
       </div>
-      <div class="window__body">
-        <!-- Date -->
+      <div class="date-weather-body">
         <div class="date-col">
-          <div class="date-col__day">{{ day_name }}</div>
+          <div class="date-col__dayname">{{ day_name }}</div>
           <div class="date-col__num">{{ day_num }}</div>
-          <div class="date-col__month-year">{{ month_name }} {{ year_num }}</div>
+          <div class="date-col__monthyear">{{ month_name }} {{ year_num }}</div>
         </div>
-        <!-- Weather + Moon -->
-        <div class="info-col">
-          <div class="weather-row">
-            <div class="weather-row__temp">{{ temp }}{{ temp_unit }}</div>
-            <div class="weather-row__detail">
-              {{ weather_label }}
-            </div>
+        <div class="weather-col">
+          <div>
+            <div class="weather-temp">{{ temp }}{{ temp_unit }}</div>
+            <div class="weather-label">{{ wx_label }}</div>
           </div>
-          <div class="moon-row">
-            <img src="{{ CDN }}/moon/moon{{ moon_img_index }}.png" alt="{{ moon_label }}">
-            <div class="moon-row__label">
-              {{ moon_label }}<br>
-              <span style="font-size:9px">Day {{ moon_phase }} of 29</span>
-            </div>
+          <div>
+            <hr class="weather-divider">
+            {% if trash_full %}
+            <div class="weather-updated">&#128465; Trash Day</div>
+            {% endif %}
           </div>
         </div>
-      </div>
-      <div class="window__footer">
-        <span>{{ day_name }}, {{ month_name }} {{ day_num }}</span>
-        <span>{% if trash_full %}🗑 Trash Day{% endif %}</span>
       </div>
     </div>
 
-    <!-- Trash -->
+    <!-- ── Icon Grid Window ── -->
+    <div class="mac-window icon-window">
+      <div class="mac-titlebar">
+        <div class="mac-closebox"></div>
+        <span class="mac-title">{{ icon_cat | capitalize }}</span>
+      </div>
+      <div class="icon-grid">
+        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic0 }}.png" alt=""></div>
+        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic1 }}.png" alt=""></div>
+        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic2 }}.png" alt=""></div>
+        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic3 }}.png" alt=""></div>
+        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic4 }}.png" alt=""></div>
+        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic5 }}.png" alt=""></div>
+      </div>
+    </div>
+
+    <!-- ── Standalone desktop icons (scattered between windows) ── -->
+    <div class="desk-icon" style="top:50px; left:345px;">
+      <img src="{{ CDN }}/icons/icon_sys{{ sd2 }}.png" alt="">
+    </div>
+    <div class="desk-icon" style="top:130px; left:345px;">
+      <img src="{{ CDN }}/icons/icon_util{{ sd3 }}.png" alt="">
+    </div>
+    <div class="desk-icon" style="top:210px; left:345px;">
+      <img src="{{ CDN }}/icons/icon_art{{ sd0 }}.png" alt="">
+    </div>
+    <div class="desk-icon" style="top:290px; left:345px;">
+      <img src="{{ CDN }}/icons/icon_dev{{ sd1 }}.png" alt="">
+    </div>
+
+    <!-- ── Moon Desk Accessory ── -->
+    <div class="mac-window moon-da">
+      <div class="mac-titlebar">
+        <div class="mac-closebox"></div>
+        <span class="mac-title">Moon Phase</span>
+      </div>
+      <div class="moon-da-body">
+        <img src="{{ CDN }}/moon/moon{{ moon_img_index }}.png" alt="{{ moon_label }}">
+        <div class="moon-da-text">
+          {{ moon_label }}<br>
+          Day {{ moon_phase }} of 29
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Trash ── -->
     <div class="trash">
       {% if trash_full %}
         <img src="{{ CDN }}/trash_full.png" alt="Trash">
       {% else %}
         <img src="{{ CDN }}/trash.png" alt="Trash">
       {% endif %}
-      <span class="trash__label">Trash</span>
+      <span class="icon-label">Trash</span>
     </div>
 
   </div><!-- /desktop -->
