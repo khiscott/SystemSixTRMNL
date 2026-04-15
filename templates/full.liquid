@@ -99,6 +99,16 @@
 {% assign cx = day_of_year | times: 37 | plus: 13 | modulo: 500 | plus: 140 %}
 {% assign cy = day_of_year | times: 53 | plus: 7  | modulo: 300 | plus: 60 %}
 
+{% comment %} ═══════ SCREEN SCALING (TRMNL X support) ═══════ {% endcomment %}
+{% assign screen_w = trmnl.screen.width | default: 800 | plus: 0 %}
+{% assign screen_h = trmnl.screen.height | default: 480 | plus: 0 %}
+{% assign scale_x = screen_w | times: 1000 | divided_by: 800 %}
+{% assign scale_y = screen_h | times: 1000 | divided_by: 480 %}
+{% if scale_x < scale_y %}{% assign scale_k = scale_x %}{% else %}{% assign scale_k = scale_y %}{% endif %}
+{% assign scale_whole = scale_k | divided_by: 1000 %}
+{% assign scale_frac = scale_k | modulo: 1000 %}
+{% assign scale_frac_str = scale_frac | prepend: "000" | slice: -3, 3 %}
+
 {% comment %} DA: show moon when visible (phase > 0), else puzzle or calculator {% endcomment %}
 {% if moon_img_idx > 0 %}{% assign show_moon = true %}{% else %}{% assign show_moon = false %}{% endif %}
 {% assign da_alt = day_of_year | modulo: 2 %}
@@ -234,7 +244,7 @@
 
 </style>
 
-<div class="screen">
+<div class="screen" style="transform: scale({{ scale_whole }}.{{ scale_frac_str }}); transform-origin: top left;">
 
 <!-- ── Menu Bar ── -->
 <div class="menubar">
@@ -336,21 +346,9 @@
     </div>
   </div>
   {% elsif da_alt == 0 %}
-  <div class="win" style="bottom:14px; left:14px; width:106px;">
-    <div class="win-tb">
-      <div class="win-close"></div>
-      <span class="win-t">Puzzle</span>
-    </div>
-    <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="width:100%; height:auto;">
-  </div>
+  <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="position:absolute; bottom:14px; left:14px; width:91px; height:auto; image-rendering:pixelated;">
   {% else %}
-  <div class="win" style="bottom:14px; left:14px; width:106px;">
-    <div class="win-tb">
-      <div class="win-close"></div>
-      <span class="win-t">Calculator</span>
-    </div>
-    <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="width:100%; height:auto;">
-  </div>
+  <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="position:absolute; bottom:14px; left:14px; width:106px; height:auto; image-rendering:pixelated;">
   {% endif %}
 
 {% comment %} ════════════════════════════════════════════════════
@@ -391,15 +389,9 @@
     </div>
   </div>
   {% elsif da_alt == 0 %}
-  <div class="win" style="bottom:14px; right:70px; width:91px;">
-    <div class="win-tb"><div class="win-close"></div><span class="win-t">Puzzle</span></div>
-    <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="width:100%; height:auto;">
-  </div>
+  <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="position:absolute; bottom:14px; right:70px; width:91px; height:auto; image-rendering:pixelated;">
   {% else %}
-  <div class="win" style="bottom:14px; right:70px; width:106px;">
-    <div class="win-tb"><div class="win-close"></div><span class="win-t">Calculator</span></div>
-    <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="width:100%; height:auto;">
-  </div>
+  <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="position:absolute; bottom:14px; right:70px; width:106px; height:auto; image-rendering:pixelated;">
   {% endif %}
 
 {% comment %} ════════════════════════════════════════════════════
@@ -460,15 +452,3 @@
 </div><!-- /desktop -->
 </div><!-- /screen -->
 
-<script>
-(function() {
-  var sw = {{ trmnl.screen.width | default: 800 }};
-  var sh = {{ trmnl.screen.height | default: 480 }};
-  var scale = Math.min(sw / 800, sh / 480);
-  if (scale !== 1) {
-    var el = document.querySelector('.screen');
-    el.style.transform = 'scale(' + scale + ')';
-    el.style.transformOrigin = 'top left';
-  }
-})();
-</script>
