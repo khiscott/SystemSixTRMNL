@@ -92,9 +92,6 @@
 {% elsif adorn == 3 %}{% assign cairo_l = "cairo_5" %}{% assign cairo_r = "cairo_6" %}
 {% else %}{% assign cairo_l = "cairo_7" %}{% assign cairo_r = "cairo_8" %}{% endif %}
 
-{% comment %} Startup disk: black or white {% endcomment %}
-{% assign disk_flavor = day_of_year | modulo: 2 %}
-
 {% comment %} Arrow cursor position (seeded pseudo-random) {% endcomment %}
 {% assign cx = day_of_year | times: 37 | plus: 13 | modulo: 500 | plus: 140 %}
 {% assign cy = day_of_year | times: 53 | plus: 7  | modulo: 300 | plus: 60 %}
@@ -276,12 +273,7 @@
 
   <!-- ── Startup Disk (top-right, always) ── -->
   <div class="startup-disk" style="top:calc(8 * var(--u)); right:calc(14 * var(--u));">
-    {% if disk_flavor == 0 %}
-      <img src="{{ CDN }}/disk_black.png" alt="">
-    {% else %}
-      <img src="{{ CDN }}/disk_white.png" alt="">
-    {% endif %}
-    <span class="lbl">System Six</span>
+    <img src="{{ CDN }}/disk_white.png" alt="">
   </div>
 
   <!-- ── Trash (bottom-right, always) ── -->
