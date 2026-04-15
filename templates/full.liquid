@@ -232,14 +232,6 @@
   /* ── Labels ── */
   .lbl { font-size: 9px; text-align: center; margin-top: 2px; white-space: nowrap; }
 
-  /* ── TRMNL X portrait ── */
-  @media (orientation: portrait) {
-    body, .screen { width: 480px; height: 800px; }
-    .scrapbook { width: 340px; }
-    .paint { width: 440px; }
-    .write { width: 440px; }
-    .icon-win { width: 260px; }
-  }
 </style>
 
 <div class="screen">
@@ -467,3 +459,16 @@
 
 </div><!-- /desktop -->
 </div><!-- /screen -->
+
+<script>
+(function() {
+  var sw = {{ trmnl.screen.width | default: 800 }};
+  var sh = {{ trmnl.screen.height | default: 480 }};
+  var scale = Math.min(sw / 800, sh / 480);
+  if (scale !== 1) {
+    var el = document.querySelector('.screen');
+    el.style.transform = 'scale(' + scale + ')';
+    el.style.transformOrigin = 'top left';
+  }
+})();
+</script>
