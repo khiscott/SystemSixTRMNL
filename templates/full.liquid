@@ -104,7 +104,7 @@
     border-bottom: 1px solid #000;
     display: flex;
     align-items: center;
-    padding: 0 10px 0 6px;
+    padding: 0 6px;
     gap: 14px;
     z-index: 10;
   }
@@ -117,8 +117,9 @@
   }
   .menubar__clock {
     margin-left: auto;
+    margin-right: 0;
     font-size: 12px;
-    padding-right: 2px;
+    flex-shrink: 0;
   }
 
   /* ── Desktop ── */
@@ -356,7 +357,7 @@
     <span class="menubar__item">Edit</span>
     <span class="menubar__item">View</span>
     <span class="menubar__item">Special</span>
-    <span class="menubar__clock">{{ hour_12 }}:{{ minute_str }} {{ ampm }}</span>
+    <span class="menubar__clock">{{ hour_12 }}:{{ minute_str }}</span>
   </div>
 
   <div class="desktop">
