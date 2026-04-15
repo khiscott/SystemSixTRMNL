@@ -104,7 +104,7 @@
     border-bottom: 1px solid #000;
     display: flex;
     align-items: center;
-    padding: 0 6px;
+    padding: 0 10px 0 6px;
     gap: 14px;
     z-index: 10;
   }
@@ -118,6 +118,7 @@
   .menubar__clock {
     margin-left: auto;
     font-size: 12px;
+    padding-right: 2px;
   }
 
   /* ── Desktop ── */
@@ -231,20 +232,23 @@
     width: 286px;
   }
   .icon-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    padding: 8px 4px;
-    gap: 0;
+    padding: 6px 4px;
+  }
+  .icon-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
   }
   .icon-cell {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 88px;
     padding: 6px 0;
   }
   .icon-cell img {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     image-rendering: pixelated;
   }
 
@@ -391,12 +395,16 @@
         <span class="mac-title">{{ icon_cat | capitalize }}</span>
       </div>
       <div class="icon-grid">
-        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic0 }}.png" alt=""></div>
-        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic1 }}.png" alt=""></div>
-        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic2 }}.png" alt=""></div>
-        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic3 }}.png" alt=""></div>
-        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic4 }}.png" alt=""></div>
-        <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic5 }}.png" alt=""></div>
+        <div class="icon-row">
+          <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic0 }}.png" alt=""></div>
+          <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic1 }}.png" alt=""></div>
+          <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic2 }}.png" alt=""></div>
+        </div>
+        <div class="icon-row">
+          <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic3 }}.png" alt=""></div>
+          <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic4 }}.png" alt=""></div>
+          <div class="icon-cell"><img src="{{ CDN }}/icons/icon_{{ icon_cat }}{{ ic5 }}.png" alt=""></div>
+        </div>
       </div>
     </div>
 
