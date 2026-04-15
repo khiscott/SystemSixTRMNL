@@ -111,10 +111,10 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body { background: #fff; width: 100vw; height: 100vh; overflow: hidden; }
+  html, body { margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important; background: #fff; overflow: hidden; }
 
   .screen {
-    width: 100vw; height: 100vh;
+    width: 100%; height: 100%;
     overflow: hidden; background: #fff;
     font-family: 'Chicago', monospace;
     position: relative;
@@ -277,9 +277,9 @@
   <!-- ── Startup Disk (top-right, always) ── -->
   <div class="startup-disk" style="top:calc(8 * var(--u)); right:calc(14 * var(--u));">
     {% if disk_flavor == 0 %}
-      <img src="{{ CDN }}/disk_black.png" alt="SystemSix">
+      <img src="{{ CDN }}/disk_black.png" alt="">
     {% else %}
-      <img src="{{ CDN }}/disk_white.png" alt="SystemSix">
+      <img src="{{ CDN }}/disk_white.png" alt="">
     {% endif %}
     <span class="lbl">System Six</span>
   </div>
