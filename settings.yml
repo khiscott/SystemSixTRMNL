@@ -1,0 +1,47 @@
+fields:
+  - keyname: latitude
+    field_type: string
+    name: Latitude
+    placeholder: "40.7128"
+    description: "Your location latitude (e.g. 40.7128 for New York)"
+    optional: false
+
+  - keyname: longitude
+    field_type: string
+    name: Longitude
+    placeholder: "-74.0060"
+    description: "Your location longitude (e.g. -74.0060 for New York)"
+    optional: false
+
+  - keyname: temperature_unit
+    field_type: select
+    name: Temperature Unit
+    default: "fahrenheit"
+    options:
+      - label: "Fahrenheit (°F)"
+        value: "fahrenheit"
+      - label: "Celsius (°C)"
+        value: "celsius"
+
+  - keyname: trash_day
+    field_type: select
+    name: Trash Day
+    description: "Day your trash goes out — the can will appear full that day"
+    default: "none"
+    options:
+      - label: "None (disabled)"
+        value: "none"
+      - label: "Monday"
+        value: "1"
+      - label: "Tuesday"
+        value: "2"
+      - label: "Wednesday"
+        value: "3"
+      - label: "Thursday"
+        value: "4"
+      - label: "Friday"
+        value: "5"
+      - label: "Saturday"
+        value: "6"
+      - label: "Sunday"
+        value: "7"
