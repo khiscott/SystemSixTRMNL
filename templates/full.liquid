@@ -99,26 +99,22 @@
 {% assign cx = day_of_year | times: 37 | plus: 13 | modulo: 500 | plus: 140 %}
 {% assign cy = day_of_year | times: 53 | plus: 7  | modulo: 300 | plus: 60 %}
 
-{% comment %} ═══════ SCREEN SCALING (TRMNL X support) ═══════ {% endcomment %}
-{% assign screen_w = trmnl.screen.width | default: 800 | plus: 0 %}
-{% assign screen_h = trmnl.screen.height | default: 480 | plus: 0 %}
-{% assign scale_x = screen_w | times: 1000 | divided_by: 800 %}
-{% assign scale_y = screen_h | times: 1000 | divided_by: 480 %}
-{% if scale_x < scale_y %}{% assign scale_k = scale_x %}{% else %}{% assign scale_k = scale_y %}{% endif %}
-{% assign scale_whole = scale_k | divided_by: 1000 %}
-{% assign scale_frac = scale_k | modulo: 1000 %}
-{% assign scale_frac_str = scale_frac | prepend: "000" | slice: -3, 3 %}
-
 {% comment %} DA: show moon when visible (phase > 0), else puzzle or calculator {% endcomment %}
 {% if moon_img_idx > 0 %}{% assign show_moon = true %}{% else %}{% assign show_moon = false %}{% endif %}
 {% assign da_alt = day_of_year | modulo: 2 %}
 
 <style>
   @font-face { font-family: 'Chicago'; src: url('{{ CDN }}/fonts/ChiKareGo2.ttf') format('truetype'); }
+
+  /* ── Responsive unit: 1u = 1px at 800×480, scales to fill any screen ── */
+  :root { --u: min(calc(100vw / 800), calc(100vh / 480)); }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body, .screen {
-    width: 800px; height: 480px;
+  body { background: #fff; width: 100vw; height: 100vh; overflow: hidden; }
+
+  .screen {
+    width: 100vw; height: 100vh;
     overflow: hidden; background: #fff;
     font-family: 'Chicago', monospace;
     position: relative;
@@ -126,125 +122,146 @@
 
   /* ── Menu Bar ── */
   .menubar {
-    position: absolute; top: 0; left: 0; right: 0; height: 20px;
+    position: absolute; top: 0; left: 0; right: 0;
+    height: calc(20 * var(--u));
     background: #fff; border-bottom: 1.5px solid #000;
     display: flex; align-items: center;
-    padding: 0 8px; gap: 14px; z-index: 100;
+    padding: 0 calc(8 * var(--u)); gap: calc(14 * var(--u)); z-index: 100;
   }
-  .menubar span { font-size: 12px; }
-  .menubar__apple { font-size: 14px; font-weight: bold; }
+  .menubar span { font-size: calc(12 * var(--u)); }
+  .menubar__apple { font-size: calc(14 * var(--u)); font-weight: bold; }
 
   /* ── Desktop ── */
-  .desktop { position: absolute; top: 21px; left: 0; right: 0; bottom: 0; background: #fff; }
+  .desktop {
+    position: absolute; top: calc(21 * var(--u)); left: 0; right: 0; bottom: 0;
+    background: #fff;
+  }
 
   /* ── Mac Window Chrome ── */
-  .win {
-    position: absolute; border: 1.5px solid #000; background: #fff;
-  }
+  .win { position: absolute; border: 1.5px solid #000; background: #fff; }
   .win-tb {
-    height: 18px;
+    height: calc(18 * var(--u));
     background: repeating-linear-gradient(to bottom, #000 0px, #000 1px, #fff 1px, #fff 2px);
     display: flex; align-items: center; position: relative;
   }
   .win-close {
-    width: 11px; height: 11px; border: 1.5px solid #000; background: #fff;
-    flex-shrink: 0; margin-left: 4px;
+    width: calc(11 * var(--u)); height: calc(11 * var(--u));
+    border: 1.5px solid #000; background: #fff;
+    flex-shrink: 0; margin-left: calc(4 * var(--u));
   }
   .win-t {
     position: absolute; left: 50%; transform: translateX(-50%);
-    background: #fff; padding: 0 6px; font-size: 11px; white-space: nowrap; line-height: 18px;
+    background: #fff; padding: 0 calc(6 * var(--u));
+    font-size: calc(11 * var(--u)); white-space: nowrap;
+    line-height: calc(18 * var(--u));
   }
 
-  /* ── Scrapbook window (Layout A) ── */
-  .scrapbook { width: 420px; }
+  /* ── Scrapbook (Layout A) ── */
+  .scrapbook { width: calc(420 * var(--u)); }
   .scrapbook-body { padding: 0; position: relative; }
   .scrapbook-scroll {
-    position: absolute; right: 0; top: 0; bottom: 0; width: 16px;
-    border-left: 1.5px solid #000;
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: calc(16 * var(--u)); border-left: 1.5px solid #000;
     background: repeating-linear-gradient(to bottom, #fff 0px, #fff 1px, #ccc 1px, #ccc 2px);
   }
   .scrapbook-scroll-up, .scrapbook-scroll-dn {
-    position: absolute; left: 0; right: 0; height: 16px;
+    position: absolute; left: 0; right: 0; height: calc(16 * var(--u));
     border: 1px solid #000; background: #fff; display: flex;
-    align-items: center; justify-content: center; font-size: 8px;
+    align-items: center; justify-content: center;
+    font-size: calc(8 * var(--u));
   }
   .scrapbook-scroll-up { top: 0; }
   .scrapbook-scroll-dn { bottom: 0; }
-  .scrapbook-content { margin-right: 18px; padding: 6px 10px 10px; }
-  .scrapbook-date {
-    text-align: center; font-size: 12px; padding: 6px 0 2px;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+  .scrapbook-content {
+    margin-right: calc(18 * var(--u));
+    padding: calc(6 * var(--u)) calc(10 * var(--u)) calc(10 * var(--u));
   }
-  .scrapbook-date img { width: 24px; height: auto; image-rendering: pixelated; }
-  .scrapbook-divider { border: none; border-top: 1px solid #000; margin: 6px 0; }
-  .scrapbook-forecast { font-size: 10px; line-height: 1.7; }
+  .scrapbook-date {
+    text-align: center; font-size: calc(12 * var(--u));
+    padding: calc(6 * var(--u)) 0 calc(2 * var(--u));
+    display: flex; align-items: center; justify-content: center;
+    gap: calc(8 * var(--u));
+  }
+  .scrapbook-date img { width: calc(24 * var(--u)); height: auto; image-rendering: pixelated; }
+  .scrapbook-divider { border: none; border-top: 1px solid #000; margin: calc(6 * var(--u)) 0; }
+  .scrapbook-forecast { font-size: calc(10 * var(--u)); line-height: 1.7; }
 
-  /* ── Paint window (Layout B) ── */
-  .paint { width: 540px; }
+  /* ── Paint (Layout B) ── */
+  .paint { width: calc(540 * var(--u)); }
   .paint-toolbar {
-    width: 32px; position: absolute; left: 0; top: 18px; bottom: 0;
+    width: calc(32 * var(--u)); position: absolute;
+    left: 0; top: calc(18 * var(--u)); bottom: 0;
     border-right: 1.5px solid #000; background: #eee;
   }
-  .paint-body { margin-left: 34px; padding: 12px; }
-  .paint-date { font-size: 14px; text-align: center; margin-bottom: 8px; }
-  .paint-temp { font-size: 48px; text-align: center; font-weight: bold; line-height: 1; }
-  .paint-wx { font-size: 12px; text-align: center; margin-top: 4px; }
-  .paint-forecast { font-size: 10px; line-height: 1.7; margin-top: 12px; padding-top: 8px; border-top: 1px solid #000; }
-
-  /* ── Write window (Layout C) ── */
-  .write { width: 480px; }
-  .write-ruler {
-    height: 12px; border-bottom: 1.5px solid #000;
-    background: repeating-linear-gradient(to right, #000 0px, #000 1px, transparent 1px, transparent 8px);
-    background-size: 8px 6px; background-position: 0 bottom; background-repeat: repeat-x;
+  .paint-body { margin-left: calc(34 * var(--u)); padding: calc(12 * var(--u)); }
+  .paint-temp {
+    font-size: calc(48 * var(--u)); text-align: center;
+    font-weight: bold; line-height: 1;
   }
-  .write-body { padding: 10px 14px; }
-  .write-line { font-size: 11px; line-height: 1.8; }
-  .write-title-line { font-size: 12px; font-weight: bold; margin-bottom: 6px; }
+  .paint-wx { font-size: calc(12 * var(--u)); text-align: center; margin-top: calc(4 * var(--u)); }
+  .paint-forecast {
+    font-size: calc(10 * var(--u)); line-height: 1.7;
+    margin-top: calc(12 * var(--u)); padding-top: calc(8 * var(--u));
+    border-top: 1px solid #000;
+  }
+
+  /* ── Write (Layout C) ── */
+  .write { width: calc(480 * var(--u)); }
+  .write-ruler {
+    height: calc(12 * var(--u)); border-bottom: 1.5px solid #000;
+    background: repeating-linear-gradient(to right, #000 0px, #000 1px, transparent 1px, transparent calc(8 * var(--u)));
+    background-size: calc(8 * var(--u)) calc(6 * var(--u));
+    background-position: 0 bottom; background-repeat: repeat-x;
+  }
+  .write-body { padding: calc(10 * var(--u)) calc(14 * var(--u)); }
+  .write-line { font-size: calc(11 * var(--u)); line-height: 1.8; }
+  .write-title-line { font-size: calc(12 * var(--u)); font-weight: bold; margin-bottom: calc(6 * var(--u)); }
 
   /* ── Icon 3×2 window ── */
-  .icon-win { width: 280px; }
+  .icon-win { width: calc(280 * var(--u)); }
   .icon-row { display: flex; justify-content: space-around; }
   .icon-cell {
     display: flex; flex-direction: column; align-items: center;
-    width: 80px; padding: 6px 0;
+    width: calc(80 * var(--u)); padding: calc(6 * var(--u)) 0;
   }
-  .icon-cell img { width: 40px; height: 40px; image-rendering: pixelated; }
+  .icon-cell img { width: calc(40 * var(--u)); height: calc(40 * var(--u)); image-rendering: pixelated; }
 
   /* ── Moon DA ── */
-  .moon-da { width: 140px; }
-  .moon-da-body { display: flex; align-items: center; padding: 6px 8px; gap: 8px; }
-  .moon-da-body img { width: 52px; height: 52px; image-rendering: pixelated; flex-shrink: 0; }
-  .moon-da-text { font-size: 9px; line-height: 1.5; }
+  .moon-da { width: calc(140 * var(--u)); }
+  .moon-da-body {
+    display: flex; align-items: center;
+    padding: calc(6 * var(--u)) calc(8 * var(--u));
+    gap: calc(8 * var(--u));
+  }
+  .moon-da-body img {
+    width: calc(52 * var(--u)); height: calc(52 * var(--u));
+    image-rendering: pixelated; flex-shrink: 0;
+  }
+  .moon-da-text { font-size: calc(9 * var(--u)); line-height: 1.5; }
 
   /* ── Puzzle / Calculator DA ── */
   .da-img { image-rendering: pixelated; display: block; }
 
   /* ── Startup Disk ── */
-  .startup-disk {
-    position: absolute; display: flex; flex-direction: column; align-items: center;
-  }
-  .startup-disk img { width: 40px; height: 40px; image-rendering: pixelated; }
+  .startup-disk { position: absolute; display: flex; flex-direction: column; align-items: center; }
+  .startup-disk img { width: calc(40 * var(--u)); height: calc(40 * var(--u)); image-rendering: pixelated; }
 
   /* ── Trash ── */
   .trash {
-    position: absolute; bottom: 8px; right: 14px;
+    position: absolute; bottom: calc(8 * var(--u)); right: calc(14 * var(--u));
     display: flex; flex-direction: column; align-items: center;
   }
-  .trash img { width: 36px; height: 36px; image-rendering: pixelated; }
+  .trash img { width: calc(36 * var(--u)); height: calc(36 * var(--u)); image-rendering: pixelated; }
 
   /* ── Arrow Cursor ── */
-  .cursor {
-    position: absolute; z-index: 50; pointer-events: none;
-  }
-  .cursor img { width: 20px; height: 20px; image-rendering: pixelated; }
+  .cursor { position: absolute; z-index: 50; pointer-events: none; }
+  .cursor img { width: calc(20 * var(--u)); height: calc(20 * var(--u)); image-rendering: pixelated; }
 
   /* ── Labels ── */
-  .lbl { font-size: 9px; text-align: center; margin-top: 2px; white-space: nowrap; }
-
+  .lbl { font-size: calc(9 * var(--u)); text-align: center; margin-top: calc(2 * var(--u)); white-space: nowrap; }
 </style>
 
-<div class="screen" style="transform: scale({{ scale_whole }}.{{ scale_frac_str }}); transform-origin: top left;">
+<div class="screen">
 
 <!-- ── Menu Bar ── -->
 <div class="menubar">
@@ -258,7 +275,7 @@
 <div class="desktop">
 
   <!-- ── Startup Disk (top-right, always) ── -->
-  <div class="startup-disk" style="top:8px; right:14px;">
+  <div class="startup-disk" style="top:calc(8 * var(--u)); right:calc(14 * var(--u));">
     {% if disk_flavor == 0 %}
       <img src="{{ CDN }}/disk_black.png" alt="SystemSix">
     {% else %}
@@ -278,7 +295,7 @@
   </div>
 
   <!-- ── Arrow Cursor ── -->
-  <div class="cursor" style="left:{{ cx }}px; top:{{ cy }}px;">
+  <div class="cursor" style="left:calc({{ cx }} * var(--u)); top:calc({{ cy }} * var(--u));">
     <img src="{{ CDN }}/arrow_cursor.png" alt="">
   </div>
 
@@ -289,7 +306,7 @@
 {% if layout == "A" %}
 
   <!-- Scrapbook Window -->
-  <div class="win scrapbook" style="top:14px; left:14px;">
+  <div class="win scrapbook" style="top:calc(14 * var(--u)); left:calc(14 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">Scrapbook</span>
@@ -316,7 +333,7 @@
   </div>
 
   <!-- Icon Window (3×2) -->
-  <div class="win icon-win" style="top:60px; right:70px;">
+  <div class="win icon-win" style="top:calc(60 * var(--u)); right:calc(70 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">{{ win_title }}</span>
@@ -335,7 +352,7 @@
 
   <!-- Moon DA or Puzzle/Calculator -->
   {% if show_moon %}
-  <div class="win moon-da" style="bottom:14px; left:14px;">
+  <div class="win moon-da" style="bottom:calc(14 * var(--u)); left:calc(14 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">Moon Phase</span>
@@ -346,9 +363,9 @@
     </div>
   </div>
   {% elsif da_alt == 0 %}
-  <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="position:absolute; bottom:14px; left:14px; width:91px; height:auto; image-rendering:pixelated;">
+  <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="position:absolute; bottom:calc(14 * var(--u)); left:calc(14 * var(--u)); width:calc(91 * var(--u)); height:auto; image-rendering:pixelated;">
   {% else %}
-  <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="position:absolute; bottom:14px; left:14px; width:106px; height:auto; image-rendering:pixelated;">
+  <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="position:absolute; bottom:calc(14 * var(--u)); left:calc(14 * var(--u)); width:calc(106 * var(--u)); height:auto; image-rendering:pixelated;">
   {% endif %}
 
 {% comment %} ════════════════════════════════════════════════════
@@ -358,7 +375,7 @@
 {% elsif layout == "B" %}
 
   <!-- Paint Window (big, date-focused) -->
-  <div class="win paint" style="top:14px; left:14px;">
+  <div class="win paint" style="top:calc(14 * var(--u)); left:calc(14 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">{{ date_str }}</span>
@@ -378,7 +395,7 @@
 
   <!-- Moon DA / Puzzle / Calculator (bottom-right area) -->
   {% if show_moon %}
-  <div class="win moon-da" style="bottom:14px; right:70px;">
+  <div class="win moon-da" style="bottom:calc(14 * var(--u)); right:calc(70 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">Moon Phase</span>
@@ -389,9 +406,9 @@
     </div>
   </div>
   {% elsif da_alt == 0 %}
-  <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="position:absolute; bottom:14px; right:70px; width:91px; height:auto; image-rendering:pixelated;">
+  <img class="da-img" src="{{ CDN }}/puzzle.png" alt="Puzzle" style="position:absolute; bottom:calc(14 * var(--u)); right:calc(70 * var(--u)); width:calc(91 * var(--u)); height:auto; image-rendering:pixelated;">
   {% else %}
-  <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="position:absolute; bottom:14px; right:70px; width:106px; height:auto; image-rendering:pixelated;">
+  <img class="da-img" src="{{ CDN }}/calculator.png" alt="Calculator" style="position:absolute; bottom:calc(14 * var(--u)); right:calc(70 * var(--u)); width:calc(106 * var(--u)); height:auto; image-rendering:pixelated;">
   {% endif %}
 
 {% comment %} ════════════════════════════════════════════════════
@@ -401,7 +418,7 @@
 {% elsif layout == "C" %}
 
   <!-- Write Window -->
-  <div class="win write" style="top:14px; left:14px;">
+  <div class="win write" style="top:calc(14 * var(--u)); left:calc(14 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">{{ date_str }}</span>
@@ -417,7 +434,7 @@
 
   <!-- Moon DA (top-right area) -->
   {% if show_moon %}
-  <div class="win moon-da" style="top:14px; right:70px;">
+  <div class="win moon-da" style="top:calc(14 * var(--u)); right:calc(70 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">Moon Phase</span>
@@ -430,7 +447,7 @@
   {% endif %}
 
   <!-- Icon Window (3×2, bottom-right) -->
-  <div class="win icon-win" style="bottom:14px; right:70px;">
+  <div class="win icon-win" style="bottom:calc(14 * var(--u)); right:calc(70 * var(--u));">
     <div class="win-tb">
       <div class="win-close"></div>
       <span class="win-t">{{ win_title }}</span>
